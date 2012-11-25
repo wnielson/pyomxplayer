@@ -5,9 +5,11 @@ Utilities.
 import os
 import subprocess
 
-# Bib Buck Bunny videos.
-BBB_FILE = "/opt/diss/videos/BigBuckBunny_320x180.mp4"
-BBB_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=YE7VzlLtp-4"
+BBB_FILE = "/opt/diss/videos/BigBuckBunny_320x180.mp4" # Big Buck Bunny
+BBB_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=YE7VzlLtp-4" # Big Buck Bunny
+ED_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=TLkA0RELQ1" # Elephants Dream - Blender Foundation's first short Open Movie
+S_YOUTUBE_WER_URL = "http://www.youtube.com/watch?v=eRsGyueVLvQ" # Sintel - Third Open Movie by Blender Foundation
+TOS_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=R6MlUcmOul8" # Tears of Steel - Blender Foundation's fourth short Open Movie
 
 YOUTUBE_FORMATS = {
     "5" : "flv [240x400]",
@@ -39,9 +41,15 @@ def get_youtube_streaming_url(web_url,fmt):
 
 def get_best_youtube_streaming_url(web_url):
     """
-    Returns the url to a stream a YouTube video using the best quality streaming format.
+    Returns the url to stream a YouTube video using the best quality streaming format.
     """
     return get_youtube_streaming_url(web_url,"best")
+
+def get_low_q_youtube_streaming_url(web_url):
+    """
+    Returns the url to stream a YouTube video using a low quality format.
+    """
+    return get_youtube_streaming_url(web_url,"18") # Use mp4 [360x640]
 
 def is_omxplayer_running():
     """
