@@ -42,3 +42,9 @@ def get_best_youtube_streaming_url(web_url):
     Returns the url to a stream a YouTube video using the best quality streaming format.
     """
     return get_youtube_streaming_url(web_url,"best")
+
+def is_omxplayer_running():
+    """
+    Returns whether there is an running instance of OMXPlayer.
+    """
+    return len(subprocess.check_output("ps ax | grep omxplayer.bin",shell=True).splitlines()) > 2
