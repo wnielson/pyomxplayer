@@ -19,6 +19,8 @@ class OMXPlayer(object):
     _DECREASE_VOLUME_CMD = '-'
     _INCREASE_VOLUME_CMD = '+'
 
+    _VOLUME_INCREMENT = 0.5 # Volume increment used by OMXPlayer in dB
+
     def __init__(self, mediafile, args=None, start_playback=False):
         if not args:
             args = ""
@@ -27,6 +29,7 @@ class OMXPlayer(object):
 
         self._paused = False
         self._subtitles_visible = True
+        self._volume = 0 # dB
         
         # Video and audio property detection code is not functional.
         # Don't need this so remove for the moment.
@@ -79,7 +82,7 @@ class OMXPlayer(object):
             self._paused = not self._paused
 
     def toggle_subtitles(self):
-        if self._self.process.send(self._TOGGLE_SUB_self.CMD):
+        if self._process.send(self._TOGGLE_SUB_CMD):
             self._subtitles_visible = not self._subtitles_visible
 
     def stop(self):
@@ -99,19 +102,33 @@ class OMXPlayer(object):
         raise NotImplementedError
 
     def set_volume(self, volume):
-        raise NotImplementedError
+        """
+        Set volume to `volume` dB.
+        """
+        volume_change_db = volume - self._volume
+        if volume_change_db != 0:
+            changes = int( round( volume_change_db / self._VOLUME_INCREMENT ) )
+            if changes > 0:
+                for i in range(0,changes):
+                    self.increase_volume()
+            else:
+                for i in range(0,-changes):
+                    self.decrease_volume()
+        self._volume = volume
 
     def seek(self, minutes):
         raise NotImplementedError
 
     def decrease_volume(self):
         """
-        Decrease volume by 0.5 dB
+        Decrease volume by one unit. See `_VOLUME_INCREMENT`.
         """
-        print self._process.send(self._DECREASE_VOLUME_CMD)
+        self._volume -= self._VOLUME_INCREMENT
+        self._process.send(self._DECREASE_VOLUME_CMD)
 
     def increase_volume(self):
         """
-        Increase volume by 0.5 dB.
+        Increase volume by one unit. See `_VOLUME_INCREMENT`.
         """
-        print self._process.send(self._INCREASE_VOLUME_CMD)
+        self._volume += self._VOLUME_INCREMENT
+        self._process.send(self._INCREASE_VOLUME_CMD)

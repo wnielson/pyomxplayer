@@ -127,6 +127,39 @@ class Test(unittest.TestCase):
         time.sleep(5)
 
         self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+
+    def test_set_volume(self):
+
+        p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
+
+        time.sleep(5)
+
+        # Test increase
+        log.info("20 dB")
+        p.set_volume(20)
+        time.sleep(5)
+
+        # Test decrease
+        log.info("-20 dB")
+        p.set_volume(-20)
+        time.sleep(5)
+
+        # Test extreme case - setting to 0
+        log.info("0 dB")
+        p.set_volume(0)
+        time.sleep(5)
+
+        # Test extreme case - no change
+        log.info("0 dB")
+        p.set_volume(0)
+        time.sleep(5)
+
+        # Test extreme case - not a multiple of 0.5
+        log.info("20.125 dB")
+        p.set_volume(20.125)
+        time.sleep(5)
+
+        self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
         
     def tearDown(self):
         """
