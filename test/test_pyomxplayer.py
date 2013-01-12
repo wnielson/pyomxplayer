@@ -1,10 +1,12 @@
-'''
+"""
 Unit tests for the pyomxplayer module.
 
-Recommend to run with:
+Tests can be run with unittest or nosetests,
 
-python -m unittest --verbose --failfast pyomxplayer.test.pyomxplayer
-'''
+- `python -m unittest --verbose --failfast pyomxplayer.test.pyomxplayer`
+- `nosetests pyomxplayer.test.test_pyomxplayer:Test.test_play_stop_local_video`
+"""
+
 import unittest
 from unittest import skip
 import time
@@ -25,7 +27,6 @@ class Test(unittest.TestCase):
     long_sleep = 30
     stop_time = 2 # Maximum time allowed between calling stop and the OMXPlayer process being terminated. 
 
-    @unittest.skip("")
     def test_play_stop_local_video(self):
         log.info("> test_play_stop_local_video")
         p = OMXPlayer(util.BBB_FILE)
@@ -36,7 +37,6 @@ class Test(unittest.TestCase):
         self.assertFalse(util.is_omxplayer_running(),"OMXPlayer should not be running.")
         log.info("< test_play_stop_local_video")
 
-    @unittest.skip("")
     def test_play_stop_youtube_video(self):
         log.info("> test_play_stop_youtube_video")
         p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
@@ -47,7 +47,7 @@ class Test(unittest.TestCase):
         self.assertFalse(util.is_omxplayer_running(),"OMXPlayer should not be running.")
         log.info("< test_play_stop_youtube_video")
 
-    @unittest.skip("")    
+    @skip("")
     def test_pause_youtube_video(self):
         log.info("> test_pause_youtube_video")
         p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
@@ -59,6 +59,7 @@ class Test(unittest.TestCase):
         self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
         log.info("< test_pause_youtube_video")
 
+    @skip("")
     def test_interleaving_youtube_video(self):
         log.info("> test_interleaving_youtube_video")
         
