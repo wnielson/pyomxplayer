@@ -19,14 +19,14 @@ class OMXPlayer(object):
     _DECREASE_VOLUME_CMD = '-'
     _INCREASE_VOLUME_CMD = '+'
 
-    paused = False
-    subtitles_visible = True
-
     def __init__(self, mediafile, args=None, start_playback=False):
         if not args:
             args = ""
         cmd = self._LAUNCH_CMD % (mediafile, args)
         self._process = pexpect.spawn(cmd)
+
+        self._paused = False
+        self._subtitles_visible = True
         
         # Video and audio property detection code is not functional.
         # Don't need this so remove for the moment.
@@ -76,11 +76,11 @@ class OMXPlayer(object):
 
     def toggle_pause(self):
         if self._process.send(self._PAUSE_CMD):
-            self.paused = not self.paused
+            self._paused = not self._paused
 
     def toggle_subtitles(self):
-        if self._process.send(self._TOGGLE_SUB_CMD):
-            self.subtitles_visible = not self.subtitles_visible
+        if self._self.process.send(self._TOGGLE_SUB_self.CMD):
+            self._subtitles_visible = not self._subtitles_visible
 
     def stop(self):
         self._process.send(self._QUIT_CMD)
