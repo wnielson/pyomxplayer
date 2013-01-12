@@ -18,8 +18,17 @@ class OMXPlayer(object):
     _QUIT_CMD = 'q'
     _DECREASE_VOLUME_CMD = '-'
     _INCREASE_VOLUME_CMD = '+'
+    _DECREASE_SPEED_CMD = '1'
+    _INCREASE_SPEED_CMD = '2'
 
     _VOLUME_INCREMENT = 0.5 # Volume increment used by OMXPlayer in dB
+
+    # Supported speeds.
+    # OMXPlayer supports a small number of different speeds.
+    SLOW_SPEED = -1
+    NORMAL_SPEED = 0
+    FAST_SPEED = 1
+    VFAST_SPEED = 2
 
     def __init__(self, mediafile, args=None, start_playback=False):
         if not args:
@@ -30,6 +39,7 @@ class OMXPlayer(object):
         self._paused = False
         self._subtitles_visible = True
         self._volume = 0 # dB
+        self._speed = self.NORMAL_SPEED
         
         # Video and audio property detection code is not functional.
         # Don't need this so remove for the moment.
@@ -89,8 +99,35 @@ class OMXPlayer(object):
         self._process.send(self._QUIT_CMD)
         self._process.terminate(force=True)
 
-    def set_speed(self):
-        raise NotImplementedError
+    def decrease_speed(self):
+        """
+        Decrease speed by one unit.
+        """
+        self._process.send(self._DECREASE_SPEED_CMD)
+
+    def increase_speed(self):
+        """
+        Increase speed by one unit.
+        """
+        self._process.send(self._INCREASE_SPEED_CMD)
+
+    def set_speed(self, speed):
+        """
+        Set speed to one of the supported speed levels.
+
+        OMXPlayer does not support granular speed changes.
+        """
+        assert speed in (self.SLOW_SPEED, self.NORMAL_SPEED, self.FAST_SPEED, self.VFAST_SPEED)
+
+        changes = speed - self._speed
+        if changes > 0:
+            for i in range(1,changes):
+                self.increase_speed()
+        else:
+            for i in range(1,-changes):
+                self.decrease_speed()
+
+        self._speed = speed
 
     def set_audiochannel(self, channel_idx):
         raise NotImplementedError
@@ -109,11 +146,12 @@ class OMXPlayer(object):
         if volume_change_db != 0:
             changes = int( round( volume_change_db / self._VOLUME_INCREMENT ) )
             if changes > 0:
-                for i in range(0,changes):
+                for i in range(1,changes):
                     self.increase_volume()
             else:
-                for i in range(0,-changes):
+                for i in range(1,-changes):
                     self.decrease_volume()
+                    
         self._volume = volume
 
     def seek(self, minutes):

@@ -160,6 +160,101 @@ class Test(unittest.TestCase):
         time.sleep(5)
 
         self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+
+    def test_change_speed(self):
+
+        p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
+
+        time.sleep(5)
+
+        # Test increase
+        log.info("increase by one")
+        p.increase_speed()
+        time.sleep(5)
+
+        # Test increase
+        log.info("increase by one")
+        p.increase_speed()
+        time.sleep(5)
+
+        # Test increase
+        log.info("increase by one")
+        p.increase_speed()
+        time.sleep(5)
+
+        # Test increase
+        log.info("increase by one")
+        p.increase_speed()
+        time.sleep(5)
+
+        # Test decrease
+        log.info("decrease by one")
+        p.decrease_speed()
+        time.sleep(5)
+
+        # Test decrease
+        log.info("decrease by one")
+        p.decrease_speed()
+        time.sleep(5)
+
+        # Test decrease
+        log.info("decrease by one")
+        p.decrease_speed()
+        time.sleep(5)
+
+        # Test decrease
+        log.info("decrease by one")
+        p.decrease_speed()
+        time.sleep(5)
+
+        # Test decrease
+        log.info("decrease by one")
+        p.decrease_speed()
+        time.sleep(5)
+
+        # Test decrease
+        log.info("decrease by one")
+        p.decrease_speed()
+        time.sleep(5)
+
+        self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+
+    def test_set_speed(self):
+
+        p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
+
+        time.sleep(10)
+
+        log.info("fast")
+        p.set_speed(OMXPlayer.FAST_SPEED)
+        time.sleep(5)
+
+        log.info("slow")
+        p.set_speed(OMXPlayer.SLOW_SPEED)
+        time.sleep(5)
+
+        log.info("normal")
+        p.set_speed(OMXPlayer.NORMAL_SPEED)
+        time.sleep(5)
+
+        # Extreme - making no change
+        log.info("normal")
+        p.set_speed(OMXPlayer.NORMAL_SPEED)
+        time.sleep(5)
+
+        # Erroneous
+        log.info("0.5")
+        with self.assertRaises(AssertionError):
+            p.set_speed(0.5)
+
+        # Erroneous
+        log.info("half")
+        with self.assertRaises(AssertionError):
+            p.set_speed("half")
+
+        time.sleep(5)
+
+        self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
         
     def tearDown(self):
         """
