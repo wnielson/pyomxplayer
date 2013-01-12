@@ -16,6 +16,8 @@ class OMXPlayer(object):
     _PAUSE_CMD = 'p'
     _TOGGLE_SUB_CMD = 's'
     _QUIT_CMD = 'q'
+    _DECREASE_VOLUME_CMD = '-'
+    _INCREASE_VOLUME_CMD = '+'
 
     paused = False
     subtitles_visible = True
@@ -79,6 +81,7 @@ class OMXPlayer(object):
     def toggle_subtitles(self):
         if self._process.send(self._TOGGLE_SUB_CMD):
             self.subtitles_visible = not self.subtitles_visible
+
     def stop(self):
         self._process.send(self._QUIT_CMD)
         self._process.terminate(force=True)
@@ -100,3 +103,15 @@ class OMXPlayer(object):
 
     def seek(self, minutes):
         raise NotImplementedError
+
+    def decrease_volume(self):
+        """
+        Decrease volume by 0.5 dB
+        """
+        print self._process.send(self._DECREASE_VOLUME_CMD)
+
+    def increase_volume(self):
+        """
+        Increase volume by 0.5 dB.
+        """
+        print self._process.send(self._INCREASE_VOLUME_CMD)

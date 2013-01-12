@@ -25,38 +25,63 @@ class Test(unittest.TestCase):
     very_short_sleep = 1
     short_sleep = 5
     long_sleep = 30
-    stop_time = 2 # Maximum time allowed between calling stop and the OMXPlayer process being terminated. 
 
+    stop_treshold = 2 # Maximum time allowed between calling stop and the OMXPlayer process being terminated. 
+
+    # YouTube Video web urls.
+    web_urls = [
+        util.BBB_YOUTUBE_WEB_URL,
+        util.ED_YOUTUBE_WEB_URL,
+        util.S_YOUTUBE_WEB_URL,
+        util.TOS_YOUTUBE_WEB_URL
+    ]
+
+    @skip("")
     def test_play_stop_local_video(self):
         log.info("> test_play_stop_local_video")
         p = OMXPlayer(util.BBB_FILE)
         time.sleep(self.short_sleep)
         self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
         p.stop()
-        time.sleep(self.stop_time)
+        time.sleep(self.stop_treshold)
         self.assertFalse(util.is_omxplayer_running(),"OMXPlayer should not be running.")
         log.info("< test_play_stop_local_video")
 
     def test_play_stop_youtube_video(self):
+        """
+        Tests playing and stopping YouTube videos.
+
+        Checks that video is stopped within acceptable theshold.
+        """
+
         log.info("> test_play_stop_youtube_video")
-        p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
-        time.sleep(self.short_sleep)
-        self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
-        p.stop()
-        time.sleep(self.stop_time)
-        self.assertFalse(util.is_omxplayer_running(),"OMXPlayer should not be running.")
+
+        for video_web_url in self.web_urls:
+            p = OMXPlayer(util.get_best_youtube_streaming_url(video_web_url))
+            time.sleep(5)
+            self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+            p.stop()
+            time.sleep(self.stop_treshold)
+            self.assertFalse(util.is_omxplayer_running(),"OMXPlayer should not be running.")
+
         log.info("< test_play_stop_youtube_video")
 
-    @skip("")
     def test_pause_youtube_video(self):
+        """
+        Testing pausing YouTube videos.
+        """
+
         log.info("> test_pause_youtube_video")
-        p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
-        time.sleep(self.short_sleep)
-        p.toggle_pause()
-        time.sleep(self.very_short_sleep)
-        p.toggle_pause()
-        time.sleep(self.short_sleep)
-        self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+
+        for video_web_url in self.web_urls:
+            p = OMXPlayer(util.get_best_youtube_streaming_url(video_web_url))
+            time.sleep(self.short_sleep)
+            p.toggle_pause()
+            time.sleep(self.very_short_sleep)
+            p.toggle_pause()
+            time.sleep(self.short_sleep)
+            self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+
         log.info("< test_pause_youtube_video")
 
     @skip("")
@@ -72,17 +97,46 @@ class Test(unittest.TestCase):
             time.sleep(self.short_sleep)
             p2.stop()
         
-        time.sleep(self.stop_time)
+        time.sleep(self.stop_treshold)
         self.assertFalse(util.is_omxplayer_running(),"OMXPlayer should not be running.")
         
         log.info("< test_interleaving_youtube_video")
+
+    def test_change_volume(self):
+
+        p = OMXPlayer(util.get_best_youtube_streaming_url(util.BBB_YOUTUBE_WEB_URL))
+
+        time.sleep(5)
+
+        for i in range(0,24):
+            log.info("increasing volume")
+            p.increase_volume()
+
+        time.sleep(5)
+
+        for i in range(0,49):
+            log.info("decreasing volume")
+            p.decrease_volume()
+
+        time.sleep(5)
+
+        for i in range(0,74):
+            log.info("increasing volume")
+            p.increase_volume()
+
+        time.sleep(5)
+
+        self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
         
     def tearDown(self):
         """
         Terminates any running OMXPlayer processes that are still running.
+
+        This is run after every test function.
         """
         log.info("> tearDown")
         util.killOMXPlayer()
+        time.sleep(1)
         log.info("< tearDown")
 
 if __name__ == "__main__":

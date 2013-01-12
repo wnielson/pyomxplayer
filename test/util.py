@@ -7,9 +7,10 @@ import subprocess
 
 BBB_FILE = "/opt/diss/videos/BigBuckBunny_320x180.mp4" # Big Buck Bunny
 BBB_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=YE7VzlLtp-4" # Big Buck Bunny
-ED_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=TLkA0RELQ1" # Elephants Dream - Blender Foundation's first short Open Movie
-S_YOUTUBE_WER_URL = "http://www.youtube.com/watch?v=eRsGyueVLvQ" # Sintel - Third Open Movie by Blender Foundation
+ED_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=TLkA0RELQ1g" # Elephants Dream - Blender Foundation's first short Open Movie
+S_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=eRsGyueVLvQ" # Sintel - Third Open Movie by Blender Foundation
 TOS_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=R6MlUcmOul8" # Tears of Steel - Blender Foundation's fourth short Open Movie
+GANGNAM_YOUTUBE_WEB_URL = "http://www.youtube.com/watch?v=9bZkp7q19f0" # PSY - GANGNAM STYLE
 
 YOUTUBE_FORMATS = {
     "5" : "flv [240x400]",
