@@ -1,8 +1,17 @@
 import pexpect
 import re
+import distutils.spawn
 
 from threading import Thread
 from time import sleep
+
+_OMXPLAYER_EXECUTABLE = "/usr/bin/omxplayer"
+
+def is_omxplayer_available():
+    """
+    :rtype: boolean
+    """
+    return distutils.spawn.find_executable(_OMXPLAYER_EXECUTABLE) is not None
 
 class OMXPlayer(object):
 
@@ -12,7 +21,7 @@ class OMXPlayer(object):
     _STATUS_REXP = re.compile(r"V :\s*([\d.]+).*")
     _DONE_REXP = re.compile(r"have a nice day.*")
 
-    _LAUNCH_CMD = '/usr/bin/omxplayer -s %s %s'
+    _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -s %s %s"
     _PAUSE_CMD = 'p'
     _TOGGLE_SUB_CMD = 's'
     _QUIT_CMD = 'q'
