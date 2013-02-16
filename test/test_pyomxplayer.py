@@ -36,6 +36,7 @@ class Test(unittest.TestCase):
         util.TOS_YOUTUBE_WEB_URL
     ]
 
+    @skip("")
     def test_play_stop_local_video(self):
         log.info("> test_play_stop_local_video")
         p = OMXPlayer(util.BBB_FILE)
