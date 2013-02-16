@@ -1,6 +1,7 @@
 import pexpect
 import re
 import distutils.spawn
+import sys
 
 from threading import Thread
 from time import sleep
@@ -44,6 +45,9 @@ class OMXPlayer(object):
             args = ""
         cmd = self._LAUNCH_CMD % (mediafile, args)
         self._process = pexpect.spawn(cmd)
+
+        # Send input and output to stdout
+        self._process.logfile = sys.stdout
 
         self._paused = False
         self._subtitles_visible = True
@@ -94,7 +98,9 @@ class OMXPlayer(object):
             elif index in (2, 3): break
             else:
                 self.position = float(self._process.match.group(1))
-            sleep(0.05)
+            #sleep(0.05)
+            # Poll position less regularly so output is less noisy and to use less resources.
+            sleep(2)
 
     def toggle_pause(self):
         if self._process.send(self._PAUSE_CMD):
