@@ -1,9 +1,13 @@
 import pexpect
 import re
 import distutils.spawn
+import logging
 
 from threading import Thread
 from time import sleep
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 _OMXPLAYER_EXECUTABLE = "/usr/bin/omxplayer"
 
@@ -126,6 +130,8 @@ class OMXPlayer(object):
 
         OMXPlayer does not support granular speed changes.
         """
+        logger.info("Setting speed = %s" % speed)
+
         assert speed in (self.SLOW_SPEED, self.NORMAL_SPEED, self.FAST_SPEED, self.VFAST_SPEED)
 
         changes = speed - self._speed
@@ -135,7 +141,6 @@ class OMXPlayer(object):
         else:
             for i in range(1,-changes):
                 self.decrease_speed()
-
         self._speed = speed
 
     def set_audiochannel(self, channel_idx):
@@ -151,6 +156,8 @@ class OMXPlayer(object):
         """
         Set volume to `volume` dB.
         """
+        logger.info("Setting volume = %s" % volume)
+
         volume_change_db = volume - self._volume
         if volume_change_db != 0:
             changes = int( round( volume_change_db / self._VOLUME_INCREMENT ) )
