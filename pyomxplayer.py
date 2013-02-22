@@ -58,6 +58,7 @@ class OMXPlayer(object):
         self._subtitles_visible = True
         self._volume = 0 # dB
         self._speed = self.NORMAL_SPEED
+        self.position = 0.0
         
         # Video and audio property detection code is not functional.
         # Don't need this so remove for the moment.
