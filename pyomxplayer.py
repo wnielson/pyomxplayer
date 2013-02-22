@@ -183,10 +183,11 @@ class OMXPlayer(object):
 
         Basic implementation, does not check duration when seeking forward.
         """
-        logger.info("Seeking to offset = %s" % offset)
+        logger.info("Seeking to target offset = %s" % offset)
 
         curr_offset = self.position
         seeks = self._calculate_num_30_seeks(curr_offset, offset)
+        logger.info("Seeking to actual offset = %s" % str(curr_offset + seeks*30))
         if seeks != 0:
             if seeks > 0:
                 for i in range(0, seeks):
