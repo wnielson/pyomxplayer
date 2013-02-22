@@ -255,6 +255,98 @@ class Test(unittest.TestCase):
         time.sleep(5)
 
         self.assertTrue(util.is_omxplayer_running(),"OMXPlayer should be running.")
+
+    def test_seek_forward_backward(self):
+
+        p = OMXPlayer(util.BBB_FILE)
+
+        time.sleep(10)
+
+        log.info("forward 30s")
+        p.seek_forward_30()
+        time.sleep(10)
+
+        log.info("backward 30s")
+        p.seek_backward_30()
+        time.sleep(10)
+
+    def test_calculate_num_30_seeks(self):
+
+        # Going up from 10
+
+        seeks = OMXPlayer._calculate_num_30_seeks(10, 10)
+        self.assertEqual(seeks, 0)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(10, 20)
+        self.assertEqual(seeks, 0)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(10, 30)
+        self.assertEqual(seeks, 1)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(10, 50)
+        self.assertEqual(seeks, 1)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(10, 60)
+        self.assertEqual(seeks, 2)
+
+        # Going down from 70
+
+        seeks = OMXPlayer._calculate_num_30_seeks(70, 70)
+        self.assertEqual(seeks, 0)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(70, 60)
+        self.assertEqual(seeks, 0)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(70, 50)
+        self.assertEqual(seeks, -1)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(70, 30)
+        self.assertEqual(seeks, -1)
+
+        seeks = OMXPlayer._calculate_num_30_seeks(70, 20)
+        self.assertEqual(seeks, -2)
+
+    def test_position(self):
+
+        p = OMXPlayer(util.BBB_FILE)
+
+        time.sleep(10)
+
+        p1 = p.position
+        self.assertGreater(p1, 10)
+        self.assertLess(p1, 10+5)
+
+        time.sleep(5)
+
+        p2 = p.position
+        self.assertGreater(p2, 15)
+        self.assertLess(p2, 15+5)
+
+        self.assertGreater(p2, p1+4)
+
+    def test_seek(self):
+
+        p = OMXPlayer(util.BBB_FILE)
+
+        time.sleep(10)
+
+        log.info("seek to 40, expect seek")
+        p.seek(40)
+
+        time.sleep(10)
+
+        log.info("seek to 60, expect no seek")
+        p.seek(60)
+
+        time.sleep(10)
+
+        log.info("seek to 60, expect no seek")
+        p.seek(60)
+
+        time.sleep(10)
+
+        log.info("seek to 50, expect seek")
+        p.seek(50)
         
     def tearDown(self):
         """

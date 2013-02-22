@@ -26,6 +26,7 @@ class OMXPlayer(object):
     _DONE_REXP = re.compile(r"have a nice day.*")
 
     _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -s %s %s"
+
     _PAUSE_CMD = 'p'
     _TOGGLE_SUB_CMD = 's'
     _QUIT_CMD = 'q'
@@ -33,6 +34,10 @@ class OMXPlayer(object):
     _INCREASE_VOLUME_CMD = '+'
     _DECREASE_SPEED_CMD = '1'
     _INCREASE_SPEED_CMD = '2'
+    _SEEK_BACKWARD_30_CMD = "\033[D" # key left
+    _SEEK_FORWARD_30_CMD = "\033[C" # key right
+    _SEEK_BACKWARD_600_CMD = "\033[B" # key down
+    _SEEK_FORWARD_600_CMD = "\033[A" # key up
 
     _VOLUME_INCREMENT = 0.5 # Volume increment used by OMXPlayer in dB
 
@@ -170,8 +175,63 @@ class OMXPlayer(object):
                     
         self._volume = volume
 
-    def seek(self, minutes):
-        raise NotImplementedError
+    def seek(self, offset):
+        """
+        Seek to offset seconds into the video.
+
+        Greater granulity OMXPlayer provides is 30 seconds so will seek to nearest.
+
+        Basic implementation, does not check duration when seeking forward.
+        """
+        logger.info("Seeking to offset = %s" % offset)
+
+        curr_offset = self.position
+        seeks = self._calculate_num_30_seeks(curr_offset, offset)
+        if seeks != 0:
+            if seeks > 0:
+                for i in range(0, seeks):
+                    self.seek_forward_30()
+            else:
+                for i in range(0, -seeks):
+                    self.seek_backward_30()
+    
+    @classmethod
+    def _calculate_num_30_seeks(cls, curr_offset, target_offset):
+        """
+        Returns the number of seeks to get to the time nearest to target_offset.
+        """
+
+        # Need to determine the nearest time to target_offset, one of:
+        #
+        # curr_offset - 30*n (some multiple of the lowest granularity in the past)
+        # curr_offset (simply don't seek)
+        # curr_offset + 30*n (some multiple of the lowest granularity in the future)
+        #
+        # More precisely:
+        #
+        # n = argmin | curr_offset + i*30 - target_offset |
+        #        i
+        #
+        # For some i,
+        #
+        # curr_offset + i*30 <= target_offset <= curr_offset + (i+1)*30
+        # i*30 <= target_offset - curr_offset <= (i+1)*30
+        # i <= (offset - curr_offset) / 30 <= (i+1)
+        # i = floor( (offset - curr_offset) / 30 )
+
+        return int( round( (target_offset-curr_offset) / 30.0 ) )
+
+    def seek_forward_30(self):
+        """
+        Seeks forward by 30 seconds.
+        """
+        self._process.send(self._SEEK_FORWARD_30_CMD)
+
+    def seek_backward_30(self):
+        """
+        Seeks backward by 30 seconds.
+        """
+        self._process.send(self._SEEK_BACKWARD_30_CMD)
 
     def decrease_volume(self):
         """
