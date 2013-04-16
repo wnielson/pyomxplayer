@@ -25,7 +25,7 @@ class OMXPlayer(object):
     _STATUS_REXP = re.compile(r"V :\s*([\d.]+).*")
     _DONE_REXP = re.compile(r"have a nice day.*")
 
-    _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + "-o hdmi -s %s %s"
+    _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -o hdmi -s %s %s"
 
     _PAUSE_CMD = 'p'
     _TOGGLE_SUB_CMD = 's'
