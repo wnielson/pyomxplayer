@@ -50,6 +50,7 @@ class OMXPlayer(object):
     VFAST_SPEED = 2
 
     def __init__(self, mediafile, args=None, start_playback=False):
+        self.mediafile = mediafile
         if not args:
             args = ""
         cmd = self._LAUNCH_CMD % (mediafile, args)
@@ -178,6 +179,16 @@ class OMXPlayer(object):
         self._volume = volume
 
     def seek(self, offset):
+        """
+        mountainpenguin's hack:
+        stop player, and restart at a specific point using the -l flag (position)
+        """
+        logger.info("Stopping omxplayer")
+        self.stop()
+        logger.info("Restarting at offset %s" % offset
+        self.__init__(mediafile=self.mediafile, args="-l %s" % offset)
+        return
+
         """
         Seek to offset seconds into the video.
 
