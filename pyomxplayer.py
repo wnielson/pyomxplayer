@@ -185,7 +185,7 @@ class OMXPlayer(object):
         """
         logger.info("Stopping omxplayer")
         self.stop()
-        logger.info("Restarting at offset %s" % offset
+        logger.info("Restarting at offset %s" % offset)
         self.__init__(mediafile=self.mediafile, args="-l %s" % offset)
         return
 
