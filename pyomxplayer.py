@@ -191,7 +191,7 @@ class OMXPlayer(object):
         logger.info("Seeking to actual offset = %s" % str(curr_offset + large_seeks*600 + small_seeks*30))
         sleep_time = 0.7
         if large_seeks != 0:
-            if seeks > 0:
+            if large_seeks > 0:
                 for i in range(large_seeks):
                     self.seek_forward_600()
                     sleep(sleep_time)
@@ -200,12 +200,12 @@ class OMXPlayer(object):
                     self.seek_backward_600()
                     sleep(sleep_time)
         if small_seeks != 0:
-            if seeks > 0:
-                for i in range(seeks):
+            if small_seeks > 0:
+                for i in range(small_seeks):
                     self.seek_forward_30()
                     sleep(sleep_time)
             else:
-                for i in range(-seeks):
+                for i in range(-small_seeks):
                     self.seek_backward_30()
                     sleep(sleep_time)
     
