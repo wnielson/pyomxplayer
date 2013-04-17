@@ -234,9 +234,9 @@ class OMXPlayer(object):
         # i = floor( (offset - curr_offset) / 30 )
 
         diff = target_offset - curr_offset
-        large_seeks = int(math.floor(diff) / 600.0)) 
+        large_seeks = int(math.floor(diff / 600.0))
         diff -= large_seeks*600
-        small_seeks = int(math.floor(diff) / 30.0))
+        small_seeks = int(math.floor(diff / 30.0))
         return large_seeks, small_seeks
 
     def seek_forward_30(self):
