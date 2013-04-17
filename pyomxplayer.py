@@ -2,6 +2,7 @@ import pexpect
 import re
 import distutils.spawn
 import logging
+import math
 
 from threading import Thread
 from time import sleep
@@ -185,22 +186,33 @@ class OMXPlayer(object):
         Basic implementation, does not check duration when seeking forward.
         """
         logger.info("Seeking to target offset = %s" % offset)
-
-        curr_offset = self.position
-        seeks = self._calculate_num_30_seeks(curr_offset, offset)
-        logger.info("Seeking to actual offset = %s" % str(curr_offset + seeks*30))
-        if seeks != 0:
+        curr_offset = self.position / 1000 / 1000
+        large_seeks, small_seeks = self._calculate_num_seeks(curr_offset, offset)
+        logger.info("Seeking to actual offset = %s" % str(curr_offset + large_seeks*600 + small_seeks*30))
+        sleep_time = 0.7
+        if large_seeks != 0:
             if seeks > 0:
-                for i in range(0, seeks):
-                    self.seek_forward_30()
+                for i in range(large_seeks):
+                    self.seek_forward_600()
+                    sleep(sleep_time)
             else:
-                for i in range(0, -seeks):
+                for i in range(-large_seeks):
+                    self.seek_backward_600()
+                    sleep(sleep_time)
+        if small_seeks != 0:
+            if seeks > 0:
+                for i in range(seeks):
+                    self.seek_forward_30()
+                    sleep(sleep_time)
+            else:
+                for i in range(-seeks):
                     self.seek_backward_30()
+                    sleep(sleep_time)
     
     @classmethod
-    def _calculate_num_30_seeks(cls, curr_offset, target_offset):
+    def _calculate_num_seeks(cls, curr_offset, target_offset):
         """
-        Returns the number of seeks to get to the time nearest to target_offset.
+        Returns the number of 600s, and 30s seeks to get to the time nearest to target_offset.
         """
 
         # Need to determine the nearest time to target_offset, one of:
@@ -221,7 +233,11 @@ class OMXPlayer(object):
         # i <= (offset - curr_offset) / 30 <= (i+1)
         # i = floor( (offset - curr_offset) / 30 )
 
-        return int( round( (target_offset-curr_offset) / 30.0 ) )
+        diff = target_offset - curr_offset
+        large_seeks = int(math.floor(diff) / 600.0)) 
+        diff -= large_seeks*600
+        small_seeks = int(math.floor(diff) / 30.0))
+        return large_seeks, small_seeks
 
     def seek_forward_30(self):
         """
@@ -229,11 +245,23 @@ class OMXPlayer(object):
         """
         self._process.send(self._SEEK_FORWARD_30_CMD)
 
+    def seek_forward_600(self):
+        """
+        Seeks forward by 600 seconds.
+        """
+        self._process.send(self._SEEK_FORWARD_600_CMD)
+
     def seek_backward_30(self):
         """
         Seeks backward by 30 seconds.
         """
         self._process.send(self._SEEK_BACKWARD_30_CMD)
+
+    def seek_backward_600(self):
+        """
+        Seeks backward by 600 seconds.
+        """
+        self._process.send(self._SEEK_BACKWARD_600_CMD)
 
     def decrease_volume(self):
         """
