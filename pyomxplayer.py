@@ -55,6 +55,8 @@ class OMXPlayer(object):
         if start_playback:
             self.toggle_pause()
         self.toggle_subtitles()
+        
+        self.finished = False
 
 
     def _get_position(self):
@@ -64,7 +66,9 @@ class OMXPlayer(object):
                                             pexpect.EOF,
                                             self._DONE_REXP])
             if index == 1: continue
-            elif index in (2, 3): break
+            elif index in (2, 3): 
+                self.finished = True
+                break
             else:
                 self.position = float(self._process.match.group(1))
             sleep(0.05)
