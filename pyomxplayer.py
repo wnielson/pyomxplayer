@@ -57,6 +57,7 @@ class OMXPlayer(object):
         self.toggle_subtitles()
         
         self.finished = False
+        self.position = 0
 
 
     def _get_position(self):
