@@ -1,10 +1,13 @@
 pyomxplayer
 ===========
-Python wrapper module around `OMXPlayer <https://github.com/huceke/omxplayer>`_
+Python wrapper module around `OMXPlayer <https://github.com/popcornmix/omxplayer>`_
 for the Raspberry Pi.
 
-Unlike `other implementations <https://github.com/KenT2/pyomxplayer>`_, this
-module does not rely on any external scripts and FIFOs, but uses the
+Forked from <https://github.com/jbaiter/pyomxplayer>'_ and updated to support 0.3.0 of omxplayer.
+Previous versions are not supported since data formats have changed over time. Check out a previous 
+commit if you want a version that supports 0.2.6.
+
+This module does not rely on any external scripts and FIFOs, but uses the
 `pexpect module <http://pypi.python.org/pypi/pexpect/2.4>`_ for communication
 with the OMXPlayer process.
 
