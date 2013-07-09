@@ -3,7 +3,7 @@ pyomxplayer
 Python wrapper module around `OMXPlayer <https://github.com/popcornmix/omxplayer>`_
 for the Raspberry Pi.
 
-Forked from <https://github.com/jbaiter/pyomxplayer>`_ and updated to support 0.3.0 of omxplayer.
+Forked https://github.com/jbaiter/pyomxplayer and updated to support 0.3.0 of omxplayer.
 Previous versions are not supported since data formats have changed over time. Check out a previous 
 commit if you want a version that supports 0.2.6.
 
