@@ -1,3 +1,4 @@
+import os
 import pexpect
 import re
 import distutils.spawn
@@ -17,12 +18,15 @@ def is_omxplayer_available():
     """
     return distutils.spawn.find_executable(_OMXPLAYER_EXECUTABLE) is not None
 
+def omxplayer_parameter_exists(parameter_string):
+    return bool(re.search("\s%s\s" % parameter_string.strip(), os.popen("/usr/bin/omxplayer").read()))
+
 class OMXPlayer(object):
 
     _FILEPROP_REXP = re.compile(r".*audio streams (\d+) video streams (\d+) chapters (\d+) subtitles (\d+).*")
-    _VIDEOPROP_REXP = re.compile(r".*Video codec ([\w-]+) width (\d+) height (\d+) profile (-?\d+) fps ([\d.]+).*")
-    _AUDIOPROP_REXP = re.compile(r"Audio codec (\w+) channels (\d+) samplerate (\d+) bitspersample (\d+).*")
-    _STATUS_REXP = re.compile(r"M:\s*(\d+).*")
+    _VIDEOPROP_REXP = re.compile(r".*Video codec ([\w-]+) width (\d+) height (\d+) profile (-?\d+) fps ([\d.]+).*", flags=re.MULTILINE)
+    _AUDIOPROP_REXP = re.compile(r".*Audio codec (\w+) channels (\d+) samplerate (\d+) bitspersample (\d+).*", flags=re.MULTILINE)
+    _STATUS_REXP = re.compile(r"(M:|V :)\s*([\d.]+).*")
     _DONE_REXP = re.compile(r"have a nice day.*")
 
     _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -s %s %s"
@@ -48,10 +52,15 @@ class OMXPlayer(object):
     FAST_SPEED = 1
     VFAST_SPEED = 2
 
-    def __init__(self, mediafile, args=None, start_playback=False):
+    def __init__(self, mediafile, args=None, start_playback=False, fullscreen=True):
         if not args:
             args = ""
-        cmd = self._LAUNCH_CMD % (mediafile, args)
+        
+        if fullscreen:
+            args += " -r"
+            
+        cmd = self._LAUNCH_CMD % (args, mediafile)
+        
         self._process = pexpect.spawn(cmd)
 
         self._paused = False
@@ -62,14 +71,20 @@ class OMXPlayer(object):
         
         self.video = dict()
         self.audio = dict()
+
+        headers = ""
+        while "Video" not in headers or "Audio" not in headers:
+            headers += self._process.readline()
+
         # Get video properties
-        video_props = self._VIDEOPROP_REXP.match(self._process.readline()).groups()
+        video_props = self._VIDEOPROP_REXP.search(headers).groups()
         self.video['decoder'] = video_props[0]
         self.video['dimensions'] = tuple(int(x) for x in video_props[1:3])
         self.video['profile'] = int(video_props[3])
         self.video['fps'] = float(video_props[4])
+
         # Get audio properties
-        audio_props = self._AUDIOPROP_REXP.match(self._process.readline()).groups()
+        audio_props = self._AUDIOPROP_REXP.search(headers).groups()
         self.audio['decoder'] = audio_props[0]
         (self.audio['channels'], self.audio['rate'],
          self.audio['bps']) = [int(x) for x in audio_props[1:]]
@@ -94,20 +109,35 @@ class OMXPlayer(object):
         self.toggle_subtitles()
         
 
-
     def _get_position(self):
-        while True:
-            index = self._process.expect([self._STATUS_REXP,
-                                            pexpect.TIMEOUT,
-                                            pexpect.EOF,
-                                            self._DONE_REXP])
-            if index == 1: continue
-            elif index in (2, 3): 
+        
+        while True:            
+            index = self._process.expect([
+                self._STATUS_REXP,
+                pexpect.TIMEOUT,
+                pexpect.EOF,
+                self._DONE_REXP
+            ])
+            
+            if index == 1: # on timeout, keep going
+                continue
+            elif index in (2, 3): # EOF or finished
                 self.finished = True
                 break
-            else:
-                self.position = float(self._process.match.group(1))
-            sleep(0.05)
+            elif index == 0:
+                self.position = float(self._process.match.group(2).strip()) / 1000000
+        
+            sleep(0.1)
+            
+            # print "POS: %0.2f" % self.position
+
+    def pause(self):
+        if not self.paused:
+            self.toggle_pause()
+
+    def play(self):
+        if self.paused:
+            self.toggle_pause()
 
     def toggle_pause(self):
         if self._process.send(self._PAUSE_CMD):
