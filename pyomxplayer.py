@@ -3,6 +3,7 @@ import pexpect
 import re
 import distutils.spawn
 import logging
+import math
 
 from threading import Thread
 from time import sleep
@@ -29,7 +30,7 @@ class OMXPlayer(object):
     _STATUS_REXP = re.compile(r"(M:|V :)\s*([\d.]+).*")
     _DONE_REXP = re.compile(r"have a nice day.*")
 
-    _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -s %s %s"
+    _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -o hdmi -s %s %s"
 
     _PAUSE_CMD = 'p'
     _TOGGLE_SUB_CMD = 's'
@@ -53,6 +54,7 @@ class OMXPlayer(object):
     VFAST_SPEED = 2
 
     def __init__(self, mediafile, args=None, start_playback=False, fullscreen=True):
+        self.mediafile = mediafile
         if not args:
             args = ""
         
@@ -211,6 +213,16 @@ class OMXPlayer(object):
 
     def seek(self, offset):
         """
+        mountainpenguin's hack:
+        stop player, and restart at a specific point using the -l flag (position)
+        """
+        logger.info("Stopping omxplayer")
+        self.stop()
+        logger.info("Restarting at offset %s" % offset)
+        self.__init__(mediafile=self.mediafile, args="-l %s" % offset)
+        return
+
+        """
         Seek to offset seconds into the video.
 
         Greater granulity OMXPlayer provides is 30 seconds so will seek to nearest.
@@ -218,22 +230,33 @@ class OMXPlayer(object):
         Basic implementation, does not check duration when seeking forward.
         """
         logger.info("Seeking to target offset = %s" % offset)
-
-        curr_offset = self.position
-        seeks = self._calculate_num_30_seeks(curr_offset, offset)
-        logger.info("Seeking to actual offset = %s" % str(curr_offset + seeks*30))
-        if seeks != 0:
-            if seeks > 0:
-                for i in range(0, seeks):
-                    self.seek_forward_30()
+        curr_offset = self.position / 1000 / 1000
+        large_seeks, small_seeks = self._calculate_num_seeks(curr_offset, offset)
+        logger.info("Seeking to actual offset = %s" % str(curr_offset + large_seeks*600 + small_seeks*30))
+        sleep_time = 0.7
+        if large_seeks != 0:
+            if large_seeks > 0:
+                for i in range(large_seeks):
+                    self.seek_forward_600()
+                    sleep(sleep_time)
             else:
-                for i in range(0, -seeks):
+                for i in range(-large_seeks):
+                    self.seek_backward_600()
+                    sleep(sleep_time)
+        if small_seeks != 0:
+            if small_seeks > 0:
+                for i in range(small_seeks):
+                    self.seek_forward_30()
+                    sleep(sleep_time)
+            else:
+                for i in range(-small_seeks):
                     self.seek_backward_30()
+                    sleep(sleep_time)
     
     @classmethod
-    def _calculate_num_30_seeks(cls, curr_offset, target_offset):
+    def _calculate_num_seeks(cls, curr_offset, target_offset):
         """
-        Returns the number of seeks to get to the time nearest to target_offset.
+        Returns the number of 600s, and 30s seeks to get to the time nearest to target_offset.
         """
 
         # Need to determine the nearest time to target_offset, one of:
@@ -254,7 +277,11 @@ class OMXPlayer(object):
         # i <= (offset - curr_offset) / 30 <= (i+1)
         # i = floor( (offset - curr_offset) / 30 )
 
-        return int( round( (target_offset-curr_offset) / 30.0 ) )
+        diff = target_offset - curr_offset
+        large_seeks = int(math.floor(diff / 600.0))
+        diff -= large_seeks*600
+        small_seeks = int(math.floor(diff / 30.0))
+        return large_seeks, small_seeks
 
     def seek_forward_30(self):
         """
@@ -262,11 +289,23 @@ class OMXPlayer(object):
         """
         self._process.send(self._SEEK_FORWARD_30_CMD)
 
+    def seek_forward_600(self):
+        """
+        Seeks forward by 600 seconds.
+        """
+        self._process.send(self._SEEK_FORWARD_600_CMD)
+
     def seek_backward_30(self):
         """
         Seeks backward by 30 seconds.
         """
         self._process.send(self._SEEK_BACKWARD_30_CMD)
+
+    def seek_backward_600(self):
+        """
+        Seeks backward by 600 seconds.
+        """
+        self._process.send(self._SEEK_BACKWARD_600_CMD)
 
     def decrease_volume(self):
         """
