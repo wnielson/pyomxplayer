@@ -1,8 +1,21 @@
 import pexpect
 import re
+import distutils.spawn
+import logging
 
 from threading import Thread
 from time import sleep
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+_OMXPLAYER_EXECUTABLE = "/usr/bin/omxplayer"
+
+def is_omxplayer_available():
+    """
+    :rtype: boolean
+    """
+    return distutils.spawn.find_executable(_OMXPLAYER_EXECUTABLE) is not None
 
 class OMXPlayer(object):
 
@@ -12,41 +25,66 @@ class OMXPlayer(object):
     _STATUS_REXP = re.compile(r"V :\s*([\d.]+).*")
     _DONE_REXP = re.compile(r"have a nice day.*")
 
-    _LAUNCH_CMD = '/usr/bin/omxplayer -s %s %s'
+    _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -s %s %s"
+
     _PAUSE_CMD = 'p'
     _TOGGLE_SUB_CMD = 's'
     _QUIT_CMD = 'q'
+    _DECREASE_VOLUME_CMD = '-'
+    _INCREASE_VOLUME_CMD = '+'
+    _DECREASE_SPEED_CMD = '1'
+    _INCREASE_SPEED_CMD = '2'
+    _SEEK_BACKWARD_30_CMD = "\033[D" # key left
+    _SEEK_FORWARD_30_CMD = "\033[C" # key right
+    _SEEK_BACKWARD_600_CMD = "\033[B" # key down
+    _SEEK_FORWARD_600_CMD = "\033[A" # key up
 
-    paused = False
-    subtitles_visible = True
+    _VOLUME_INCREMENT = 0.5 # Volume increment used by OMXPlayer in dB
+
+    # Supported speeds.
+    # OMXPlayer supports a small number of different speeds.
+    SLOW_SPEED = -1
+    NORMAL_SPEED = 0
+    FAST_SPEED = 1
+    VFAST_SPEED = 2
 
     def __init__(self, mediafile, args=None, start_playback=False):
         if not args:
             args = ""
         cmd = self._LAUNCH_CMD % (mediafile, args)
         self._process = pexpect.spawn(cmd)
-        
-        self.video = dict()
-        self.audio = dict()
-        # Get file properties
-        file_props = self._FILEPROP_REXP.match(self._process.readline()).groups()
-        (self.audio['streams'], self.video['streams'],
-         self.chapters, self.subtitles) = [int(x) for x in file_props]
-        # Get video properties
-        video_props = self._VIDEOPROP_REXP.match(self._process.readline()).groups()
-        self.video['decoder'] = video_props[0]
-        self.video['dimensions'] = tuple(int(x) for x in video_props[1:3])
-        self.video['profile'] = int(video_props[3])
-        self.video['fps'] = float(video_props[4])
-        # Get audio properties
-        audio_props = self._AUDIOPROP_REXP.match(self._process.readline()).groups()
-        self.audio['decoder'] = audio_props[0]
-        (self.audio['channels'], self.audio['rate'],
-         self.audio['bps']) = [int(x) for x in audio_props[1:]]
 
-        if self.audio['streams'] > 0:
-            self.current_audio_stream = 1
-            self.current_volume = 0.0
+        self._paused = False
+        self._subtitles_visible = True
+        self._volume = 0 # dB
+        self._speed = self.NORMAL_SPEED
+        self.position = 0.0
+        
+        # Video and audio property detection code is not functional.
+        # Don't need this so remove for the moment.
+        
+#        self.video = dict()
+#        self.audio = dict()
+#        # Get file properties
+#        file_props = self._FILEPROP_REXP.match(self._process.readline()).groups()
+#        (self.audio['streams'], self.video['streams'],
+#         self.chapters, self.subtitles) = [int(x) for x in file_props]
+#        # Get video properties
+#        video_props = self._VIDEOPROP_REXP.match(self._process.readline()).groups()
+#        video_props = self._VIDEOPROP_REXP.match(s).groups()
+#        self.video['decoder'] = video_props[0]
+#        self.video['dimensions'] = tuple(int(x) for x in video_props[1:3])
+#        self.video['profile'] = int(video_props[3])
+#        self.video['fps'] = float(video_props[4])
+#        # Get audio properties
+#        audio_props = self._AUDIOPROP_REXP.match(self._process.readline()).groups()
+#        self.audio['decoder'] = audio_props[0]
+#        (self.audio['channels'], self.audio['rate'],
+#         self.audio['bps']) = [int(x) for x in audio_props[1:]]
+#
+#        if self.audio['streams'] > 0:
+#            self.current_audio_stream = 1
+#            self.current_volume = 0.0
 
         self._position_thread = Thread(target=self._get_position)
         self._position_thread.start()
@@ -70,17 +108,46 @@ class OMXPlayer(object):
 
     def toggle_pause(self):
         if self._process.send(self._PAUSE_CMD):
-            self.paused = not self.paused
+            self._paused = not self._paused
 
     def toggle_subtitles(self):
         if self._process.send(self._TOGGLE_SUB_CMD):
-            self.subtitles_visible = not self.subtitles_visible
+            self._subtitles_visible = not self._subtitles_visible
+
     def stop(self):
         self._process.send(self._QUIT_CMD)
         self._process.terminate(force=True)
 
-    def set_speed(self):
-        raise NotImplementedError
+    def decrease_speed(self):
+        """
+        Decrease speed by one unit.
+        """
+        self._process.send(self._DECREASE_SPEED_CMD)
+
+    def increase_speed(self):
+        """
+        Increase speed by one unit.
+        """
+        self._process.send(self._INCREASE_SPEED_CMD)
+
+    def set_speed(self, speed):
+        """
+        Set speed to one of the supported speed levels.
+
+        OMXPlayer does not support granular speed changes.
+        """
+        logger.info("Setting speed = %s" % speed)
+
+        assert speed in (self.SLOW_SPEED, self.NORMAL_SPEED, self.FAST_SPEED, self.VFAST_SPEED)
+
+        changes = speed - self._speed
+        if changes > 0:
+            for i in range(1,changes):
+                self.increase_speed()
+        else:
+            for i in range(1,-changes):
+                self.decrease_speed()
+        self._speed = speed
 
     def set_audiochannel(self, channel_idx):
         raise NotImplementedError
@@ -92,7 +159,92 @@ class OMXPlayer(object):
         raise NotImplementedError
 
     def set_volume(self, volume):
-        raise NotImplementedError
+        """
+        Set volume to `volume` dB.
+        """
+        logger.info("Setting volume = %s" % volume)
 
-    def seek(self, minutes):
-        raise NotImplementedError
+        volume_change_db = volume - self._volume
+        if volume_change_db != 0:
+            changes = int( round( volume_change_db / self._VOLUME_INCREMENT ) )
+            if changes > 0:
+                for i in range(1,changes):
+                    self.increase_volume()
+            else:
+                for i in range(1,-changes):
+                    self.decrease_volume()
+                    
+        self._volume = volume
+
+    def seek(self, offset):
+        """
+        Seek to offset seconds into the video.
+
+        Greater granulity OMXPlayer provides is 30 seconds so will seek to nearest.
+
+        Basic implementation, does not check duration when seeking forward.
+        """
+        logger.info("Seeking to target offset = %s" % offset)
+
+        curr_offset = self.position
+        seeks = self._calculate_num_30_seeks(curr_offset, offset)
+        logger.info("Seeking to actual offset = %s" % str(curr_offset + seeks*30))
+        if seeks != 0:
+            if seeks > 0:
+                for i in range(0, seeks):
+                    self.seek_forward_30()
+            else:
+                for i in range(0, -seeks):
+                    self.seek_backward_30()
+    
+    @classmethod
+    def _calculate_num_30_seeks(cls, curr_offset, target_offset):
+        """
+        Returns the number of seeks to get to the time nearest to target_offset.
+        """
+
+        # Need to determine the nearest time to target_offset, one of:
+        #
+        # curr_offset - 30*n (some multiple of the lowest granularity in the past)
+        # curr_offset (simply don't seek)
+        # curr_offset + 30*n (some multiple of the lowest granularity in the future)
+        #
+        # More precisely:
+        #
+        # n = argmin | curr_offset + i*30 - target_offset |
+        #        i
+        #
+        # For some i,
+        #
+        # curr_offset + i*30 <= target_offset <= curr_offset + (i+1)*30
+        # i*30 <= target_offset - curr_offset <= (i+1)*30
+        # i <= (offset - curr_offset) / 30 <= (i+1)
+        # i = floor( (offset - curr_offset) / 30 )
+
+        return int( round( (target_offset-curr_offset) / 30.0 ) )
+
+    def seek_forward_30(self):
+        """
+        Seeks forward by 30 seconds.
+        """
+        self._process.send(self._SEEK_FORWARD_30_CMD)
+
+    def seek_backward_30(self):
+        """
+        Seeks backward by 30 seconds.
+        """
+        self._process.send(self._SEEK_BACKWARD_30_CMD)
+
+    def decrease_volume(self):
+        """
+        Decrease volume by one unit. See `_VOLUME_INCREMENT`.
+        """
+        self._volume -= self._VOLUME_INCREMENT
+        self._process.send(self._DECREASE_VOLUME_CMD)
+
+    def increase_volume(self):
+        """
+        Increase volume by one unit. See `_VOLUME_INCREMENT`.
+        """
+        self._volume += self._VOLUME_INCREMENT
+        self._process.send(self._INCREASE_VOLUME_CMD)
