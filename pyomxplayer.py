@@ -20,15 +20,15 @@ def is_omxplayer_available():
     return distutils.spawn.find_executable(_OMXPLAYER_EXECUTABLE) is not None
 
 def omxplayer_parameter_exists(parameter_string):
-    return bool(re.search("\s%s\s" % parameter_string.strip(), os.popen("/usr/bin/omxplayer").read()))
+    return bool(re.search(b"\s%s\s" % parameter_string.strip(), os.popen("/usr/bin/omxplayer").read()))
 
 class OMXPlayer(object):
 
-    _FILEPROP_REXP = re.compile(r".*audio streams (\d+) video streams (\d+) chapters (\d+) subtitles (\d+).*")
-    _VIDEOPROP_REXP = re.compile(r".*Video codec ([\w-]+) width (\d+) height (\d+) profile (-?\d+) fps ([\d.]+).*", flags=re.MULTILINE)
-    _AUDIOPROP_REXP = re.compile(r".*Audio codec (\w+) channels (\d+) samplerate (\d+) bitspersample (\d+).*", flags=re.MULTILINE)
-    _STATUS_REXP = re.compile(r"(M:|V :)\s*([\d.]+).*")
-    _DONE_REXP = re.compile(r"have a nice day.*")
+    _FILEPROP_REXP = re.compile(rb".*audio streams (\d+) video streams (\d+) chapters (\d+) subtitles (\d+).*")
+    _VIDEOPROP_REXP = re.compile(rb".*Video codec ([\w-]+) width (\d+) height (\d+) profile (-?\d+) fps ([\d.]+).*", flags=re.MULTILINE)
+    _AUDIOPROP_REXP = re.compile(rb".*Audio codec (\w+) channels (\d+) samplerate (\d+) bitspersample (\d+).*", flags=re.MULTILINE)
+    _STATUS_REXP = re.compile(rb"(M:|V :)\s*([\d.]+).*")
+    _DONE_REXP = re.compile(rb"have a nice day.*")
 
     _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -o hdmi -s %s %s"
 
@@ -74,8 +74,8 @@ class OMXPlayer(object):
         self.video = dict()
         self.audio = dict()
 
-        headers = ""
-        while "Video" not in headers or "Audio" not in headers:
+        headers = b""
+        while b"Video" not in headers or b"Audio" not in headers:
             headers += self._process.readline()
 
         # Get video properties
@@ -134,11 +134,11 @@ class OMXPlayer(object):
             # print "POS: %0.2f" % self.position
 
     def pause(self):
-        if not self.paused:
+        if not self._paused:
             self.toggle_pause()
 
     def play(self):
-        if self.paused:
+        if self._paused:
             self.toggle_pause()
 
     def toggle_pause(self):
