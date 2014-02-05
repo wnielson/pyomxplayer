@@ -1,7 +1,6 @@
 import os
 import pexpect
 import re
-import distutils.spawn
 import logging
 import math
 
@@ -17,7 +16,7 @@ def is_omxplayer_available():
     """
     :rtype: boolean
     """
-    return distutils.spawn.find_executable(_OMXPLAYER_EXECUTABLE) is not None
+    return os.access(_OMXPLAYER_EXECUTABLE, os.X_OK)
 
 def omxplayer_parameter_exists(parameter_string):
     return bool(re.search(b"\s%s\s" % parameter_string.strip(), os.popen("/usr/bin/omxplayer").read()))
