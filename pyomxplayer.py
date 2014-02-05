@@ -23,11 +23,11 @@ def omxplayer_parameter_exists(parameter_string):
 
 class OMXPlayer(object):
 
-    _FILEPROP_REXP = re.compile(rb".*audio streams (\d+) video streams (\d+) chapters (\d+) subtitles (\d+).*")
-    _VIDEOPROP_REXP = re.compile(rb".*Video codec ([\w-]+) width (\d+) height (\d+) profile (-?\d+) fps ([\d.]+).*", flags=re.MULTILINE)
-    _AUDIOPROP_REXP = re.compile(rb".*Audio codec (\w+) channels (\d+) samplerate (\d+) bitspersample (\d+).*", flags=re.MULTILINE)
-    _STATUS_REXP = re.compile(rb"(M:|V :)\s*([\d.]+).*")
-    _DONE_REXP = re.compile(rb"have a nice day.*")
+    _FILEPROP_REXP = re.compile(r".*audio streams (\d+) video streams (\d+) chapters (\d+) subtitles (\d+).*")
+    _VIDEOPROP_REXP = re.compile(r".*Video codec ([\w-]+) width (\d+) height (\d+) profile (-?\d+) fps ([\d.]+).*", flags=re.MULTILINE)
+    _AUDIOPROP_REXP = re.compile(r".*Audio codec (\w+) channels (\d+) samplerate (\d+) bitspersample (\d+).*", flags=re.MULTILINE)
+    _STATUS_REXP = re.compile(r"(M:|V :)\s*([\d.]+).*")
+    _DONE_REXP = re.compile(r"have a nice day.*")
 
     _LAUNCH_CMD = _OMXPLAYER_EXECUTABLE + " -o hdmi -s %s %s"
 
